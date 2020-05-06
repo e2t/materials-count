@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MainForm
    ClientHeight    =   9705.001
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   14610
+   ClientWidth     =   18315
    OleObjectBlob   =   "MainForm.frx":0000
    ShowModal       =   0   'False
    StartUpPosition =   1  'CenterOwner
@@ -14,6 +14,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub btnCancel_Click()
@@ -29,9 +30,15 @@ Private Sub chkCurDir_Click()
     ResearchMaterials
 End Sub
 
-Private Sub lstDeps_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+Private Sub lstDeps_Change()
     If Me.lstDeps.ListIndex >= 0 Then
         ShowWhereIsPartUsed Me.lstDeps.ListIndex
+    End If
+End Sub
+
+Private Sub lstParts_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+    If Me.lstParts.ListIndex >= 0 Then
+        OpenPart Me.lstParts.ListIndex
     End If
 End Sub
 

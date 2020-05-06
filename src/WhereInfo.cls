@@ -13,3 +13,4 @@ Public partName As String
 Public conf As String
 Public count As Integer
 Public mass As Double
+Public doc As ModelDoc2

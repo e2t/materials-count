@@ -9,6 +9,7 @@ Dim gMaterials As Dictionary
 Dim gKeys() As String
 Dim gFSO As FileSystemObject
 Dim gCurDirMask As String
+Dim gWherePartIsUsed As Dictionary
 
 Const COL_NAME = 0
 Const COL_MASS = 1
@@ -18,6 +19,7 @@ Sub Main()
     Set swApp = Application.SldWorks
     Set gFSO = New FileSystemObject
     Set gMaterials = New Dictionary
+    Set gWherePartIsUsed = New Dictionary
     
     Set gCurDoc = swApp.ActiveDoc
     If gCurDoc Is Nothing Then Exit Sub
@@ -50,6 +52,7 @@ Function ResearchMaterials() 'mask for button
         ReDim gKeys(gMaterials.count - 1)
     End If
     FilterAndPrint
+    ClearPartList
 End Function
 
 Sub SearchMaterials(asm As AssemblyDoc, onlyInCurrentDir As Boolean)
@@ -112,7 +115,7 @@ Sub AddComponent(comp As Component2)
         gMaterials.Add key, item
     End If
         
-    AddWherePartIsUsed key, partName, conf, mass
+    AddWherePartIsUsed key, partName, conf, mass, doc
     gMaterials(key).totalCount = gMaterials(key).totalCount + 1
     gMaterials(key).totalMass = gMaterials(key).totalMass + mass
 End Sub
@@ -159,7 +162,7 @@ Function CreateMaterialBlank(material As String, propBlank As String, propSize A
     End If
 End Function
 
-Sub AddWherePartIsUsed(key As String, partName As String, conf As String, mass As Double)
+Sub AddWherePartIsUsed(key As String, partName As String, conf As String, mass As Double, doc As ModelDoc2)
     Dim partKey As String
     Dim item As WhereInfo
     
@@ -170,6 +173,7 @@ Sub AddWherePartIsUsed(key As String, partName As String, conf As String, mass A
         item.conf = conf
         item.count = 0
         item.mass = 0#
+        Set item.doc = doc
         gMaterials(key).where.Add partKey, item
     End If
     
@@ -255,21 +259,51 @@ Function PrintComponents(topKeysBound As Long) 'mask for button
     End With
 End Function
 
+Function ClearPartList() 'mask for button
+    MainForm.lstParts.Clear
+    gWherePartIsUsed.RemoveAll
+End Function
+
+Function KeyForWhereIsPartUsed(where As WhereInfo) As String
+    KeyForWhereIsPartUsed = where.partName & " (" & where.conf & ")"
+End Function
+
 Sub ShowWhereIsPartUsed(index As Integer)
     Dim key As String
     Dim info As MaterialBlankInfo
     Dim partKey_ As Variant
-    Dim text As String
+    Dim parts() As String
+    Dim i As Long
+    Dim where As WhereInfo
     
+    ClearPartList
     key = gKeys(index)
     Set info = gMaterials(key)
+    ReDim parts(info.where.count)
+    i = -1
     For Each partKey_ In info.where
-        text = text & info.where(partKey_).partName & " (" & info.where(partKey_).conf & ") --" _
-               & Str(info.where(partKey_).count) & " רע." _
-               '& "[" & Str(info.where(partKey_).mass) & " kg ]"
-        text = text & vbNewLine
+        i = i + 1
+        Set where = info.where(partKey_)
+        parts(i) = KeyForWhereIsPartUsed(where) & " --" _
+                   & Str(where.count) & " רע." _
+                   '& "[" & Str(where.mass) & " kg ]"
+        gWherePartIsUsed.Add parts(i), where
     Next
-    MsgBox text, , info.materialBlank
+    QuickSort parts, LBound(parts), i
+    For Each partKey_ In parts
+        MainForm.lstParts.AddItem partKey_
+    Next
+End Sub
+
+Sub OpenPart(index As Integer)
+    Dim errors As swActivateDocError_e
+    Dim key As String
+    Dim where As WhereInfo
+    
+    key = MainForm.lstParts.List(index)
+    Set where = gWherePartIsUsed(key)
+    swApp.ActivateDoc3 where.doc.GetPathName, False, swDontRebuildActiveDoc, errors
+    where.doc.ShowConfiguration2 where.conf
 End Sub
 
 Function ExitApp()  'mask for button
