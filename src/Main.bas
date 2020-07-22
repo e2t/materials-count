@@ -295,7 +295,7 @@ Sub ShowWhereIsPartUsed(index As Integer)
     Next
 End Sub
 
-Sub OpenPart(index As Integer)
+Sub OpenPart(index As Integer, needToCopy As Boolean)
     Dim errors As swActivateDocError_e
     Dim key As String
     Dim where As WhereInfo
@@ -304,7 +304,28 @@ Sub OpenPart(index As Integer)
     Set where = gWherePartIsUsed(key)
     swApp.ActivateDoc3 where.doc.GetPathName, False, swDontRebuildActiveDoc, errors
     where.doc.ShowConfiguration2 where.conf
+    
+    If needToCopy Then
+        CopyInClipBoard CreateNewName(where.doc.Extension, where.conf)
+    End If
 End Sub
+
+Function GetProperty(propName As String, docext As ModelDocExtension, confName As String) As String
+    Dim resultGetProp As swCustomInfoGetResult_e
+    Dim rawProp As String, resolvedValue As String
+    Dim wasResolved As Boolean
+    
+    resultGetProp = docext.CustomPropertyManager(confName).Get5(propName, True, rawProp, resolvedValue, wasResolved)
+    If resultGetProp = swCustomInfoGetResult_NotPresent Then
+        docext.CustomPropertyManager("").Get5 propName, True, rawProp, resolvedValue, wasResolved
+    End If
+    GetProperty = resolvedValue
+End Function
+
+Function CreateNewName(docext As ModelDocExtension, confName As String) As String
+    CreateNewName = GetProperty("Обозначение", docext, confName) + " " + _
+                    GetProperty("Наименование", docext, confName)
+End Function
 
 Function ExitApp()  'mask for button
     Unload MainForm

@@ -38,7 +38,7 @@ End Sub
 
 Private Sub lstParts_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
     If Me.lstParts.ListIndex >= 0 Then
-        OpenPart Me.lstParts.ListIndex
+        OpenPart Me.lstParts.ListIndex, Me.ClipboardChk.Value
     End If
 End Sub
 
