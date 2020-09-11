@@ -28,7 +28,7 @@ Sub Main()
         Exit Sub
     End If
    
-    gCurDirMask = LCase(GetFolderPath(gCurDoc.GetPathName) & "*")
+    gCurDirMask = LCase(gFSO.GetParentFolderName(gCurDoc.GetPathName)) & "\*"
     gCurDocName = gFSO.GetBaseName(gCurDoc.GetPathName)
     gCurConf = gCurDoc.GetActiveConfiguration.Name
     
@@ -37,10 +37,6 @@ Sub Main()
     MainForm.Caption = "Материалы " & gCurDocName & " (" & gCurConf & ") "
     MainForm.Show
 End Sub
-
-Function GetFolderPath(pathName As String) As String
-    GetFolderPath = Left(pathName, InStrRev(pathName, "\"))
-End Function
 
 Function ResearchMaterials() 'mask for button
     Dim onlyInCurrentDir As Boolean
@@ -69,12 +65,12 @@ Sub SearchMaterials(asm As AssemblyDoc, onlyInCurrentDir As Boolean)
         If doc Is Nothing Then  'не найден
             GoTo NextFor
         End If
-        If doc.GetType = swDocASSEMBLY Then
-            If Not onlyInCurrentDir Or (LCase(doc.GetPathName) Like gCurDirMask) Then
+        If Not onlyInCurrentDir Or (LCase(doc.GetPathName) Like gCurDirMask) Then
+            If doc.GetType = swDocASSEMBLY Then
                 SearchMaterials doc, onlyInCurrentDir
+            Else  'doc is part
+                AddComponent comp
             End If
-        Else  'doc is part
-            AddComponent comp
         End If
 NextFor:
     Next
