@@ -52,28 +52,31 @@ Function ResearchMaterials() 'mask for button
 End Function
 
 Sub SearchMaterials(asm As AssemblyDoc, onlyInCurrentDir As Boolean)
-    Dim comp_ As Variant
-    Dim comp As Component2
-    Dim doc As ModelDoc2
-    
-    For Each comp_ In asm.GetComponents(True)
-        Set comp = comp_
-        If comp.IsSuppressed Then  'погашен
-            GoTo NextFor
+  Const TopLevelOnly = True
+  Dim comp_ As Variant
+  Dim comp As Component2
+  Dim doc As ModelDoc2
+  
+  If asm.GetComponentCount(TopLevelOnly) > 0 Then
+    For Each comp_ In asm.GetComponents(TopLevelOnly)
+      Set comp = comp_
+      If comp.IsSuppressed Then  'погашен
+        GoTo NextFor
+      End If
+      Set doc = comp.GetModelDoc2
+      If doc Is Nothing Then  'не найден
+        GoTo NextFor
+      End If
+      If Not onlyInCurrentDir Or (LCase(doc.GetPathName) Like gCurDirMask) Then
+        If doc.GetType = swDocASSEMBLY Then
+          SearchMaterials doc, onlyInCurrentDir
+        Else  'doc is part
+          AddComponent comp
         End If
-        Set doc = comp.GetModelDoc2
-        If doc Is Nothing Then  'не найден
-            GoTo NextFor
-        End If
-        If Not onlyInCurrentDir Or (LCase(doc.GetPathName) Like gCurDirMask) Then
-            If doc.GetType = swDocASSEMBLY Then
-                SearchMaterials doc, onlyInCurrentDir
-            Else  'doc is part
-                AddComponent comp
-            End If
-        End If
+      End If
 NextFor:
     Next
+  End If
 End Sub
 
 Sub AddComponent(comp As Component2)
