@@ -1,4 +1,6 @@
-﻿# Materials-Count
+This project has been moved to https://codeberg.org/e2t/materials-count
+ 
+ # Materials-Count
 
 Макрос для подсчета используемых материалов в сборке SolidWorks.
 
